@@ -2,7 +2,6 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import { generateToken } from "../lib/utils.js";
 
-
 // signup function
 
 export const signup = async () => {
@@ -29,9 +28,40 @@ export const signup = async () => {
       success: true,
       userData: newUser,
       token,
-      message: "User created successfully"})
+      message: "User created successfully",
+    });
   } catch (error) {
     console.log(error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// login function
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const userData = await User.findOne({ email });
+
+    const isPasswordValid = await bcrypt.compare(password, userData.password);
+
+    if (!isPasswordValid) {
+      return res.json({ success: false, message: "Invalid email or password" });
+    }
+
+    const token = generateToken(userData._id);
+
+    res.json({
+      success: true,
+      userData,
+      token,
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.log(error.message);
     res.json({
       success: false,
       message: error.message,
